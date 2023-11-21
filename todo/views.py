@@ -14,7 +14,7 @@ def index(request: HttpRequest) -> HttpResponse:
     )
 
 
-def get_todos(request: HttpRequest) -> HttpResponse:
+def get_all_todos(request: HttpRequest) -> HttpResponse:
     return HttpResponse(
         JsonResponse(
             dict(
@@ -113,7 +113,7 @@ def add_todo(request: HttpRequest) -> HttpResponse:
             )
 
 
-def delete_todos(request: HttpRequest) -> HttpResponse:
+def delete_all_todos(request: HttpRequest) -> HttpResponse:
     try:
         Todo.objects.all().delete()
         return HttpResponse(
@@ -169,16 +169,26 @@ def handle_todo_by_id(request: HttpRequest, id: int) -> HttpRequest:
         return get_todo_by_id(request=request, id=id)
     elif request.method == "DELETE":
         return delete_todo_by_id(request=request, id=id)
+    elif request.method == "PUT":
+        pass
+    else:
+        return HttpResponse(
+            JsonResponse(
+                dict(error="Method not allowed."),
+            ),
+            status=405,
+            content_type="application/json",
+        )
 
 
 @csrf_exempt
 def handle_todos(request: HttpRequest) -> HttpResponse:
     if request.method == "GET":
-        return get_todos(request=request)
+        return get_all_todos(request=request)
     elif request.method == "POST":
         return add_todo(request=request)
     elif request.method == "DELETE":
-        return delete_todos(request=request)
+        return delete_all_todos(request=request)
     else:
         return HttpResponse(
             JsonResponse(

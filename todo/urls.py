@@ -3,8 +3,6 @@ from .views import (
     handle_todo_by_id,
     handle_todos,
     index,
-    delete_todos,
-    delete_todo_by_id,
 )
 
 urlpatterns = [
