@@ -1,6 +1,7 @@
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from .models import Todo
 from django.core.exceptions import ObjectDoesNotExist
+from django.views.decorators.csrf import csrf_exempt
 
 
 def index(request: HttpRequest) -> HttpResponse:
@@ -70,12 +71,60 @@ def get_todo_by_id(request: HttpRequest, id: int) -> HttpResponse:
         )
 
 
+@csrf_exempt
 def add_todo(request: HttpRequest) -> HttpResponse:
-    pass
+    title = request.POST["title"]
+    desc = request.POST["desc"]
+    if not title or not desc:
+        return HttpResponse(
+            JsonResponse(
+                dict(
+                    error="Required fields missing.",
+                ),
+            ),
+            status=400,
+            content_type="application/json",
+        )
+    else:
+        try:
+            Todo.objects.create(
+                title=title,
+                desc=desc,
+                done=False,
+            )
+            return HttpResponse(
+                JsonResponse(
+                    dict(
+                        message="Todo added.",
+                    ),
+                ),
+                status=201,
+                content_type="application/json",
+            )
+        except Exception as ex:
+            return HttpResponse(
+                JsonResponse(
+                    dict(
+                        error="An error occurred.",
+                        exception=ex.__str__(),
+                    ),
+                ),
+                status=500,
+                content_type="application/json",
+            )
 
 
+@csrf_exempt
 def handle_todos(request: HttpRequest) -> HttpResponse:
     if request.method == "GET":
         return get_todos(request=request)
-    else:
+    elif request.method == "POST":
         return add_todo(request=request)
+    else:
+        return HttpResponse(
+            JsonResponse(
+                dict(error="Method not allowed."),
+            ),
+            status=405,
+            content_type="application/json",
+        )
