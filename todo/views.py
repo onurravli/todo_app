@@ -71,7 +71,6 @@ def get_todo_by_id(request: HttpRequest, id: int) -> HttpResponse:
         )
 
 
-@csrf_exempt
 def add_todo(request: HttpRequest) -> HttpResponse:
     title = request.POST.get("title", "")
     desc = request.POST.get("desc", "")
@@ -134,12 +133,52 @@ def delete_todos(request: HttpRequest) -> HttpResponse:
         )
 
 
+def delete_todo_by_id(request: HttpRequest, id: int) -> HttpResponse:
+    try:
+        Todo.objects.get(pk=id).delete()
+        return HttpResponse(
+            JsonResponse(
+                dict(message=f"Todo with id {id} deleted."),
+            ),
+            status=200,
+            content_type="application/json",
+        )
+    except ObjectDoesNotExist as odne:
+        return HttpResponse(
+            JsonResponse(
+                dict(
+                    error="Todo not found",
+                ),
+            ),
+            status=404,
+            content_type="application/json",
+        )
+    except Exception as ex:
+        return HttpResponse(
+            JsonResponse(
+                dict(message="An error occurred."),
+            ),
+            status=500,
+            content_type="application/json",
+        )
+
+
+@csrf_exempt
+def handle_todo_by_id(request: HttpRequest, id: int) -> HttpRequest:
+    if request.method == "GET":
+        return get_todo_by_id(request=request, id=id)
+    elif request.method == "DELETE":
+        return delete_todo_by_id(request=request, id=id)
+
+
 @csrf_exempt
 def handle_todos(request: HttpRequest) -> HttpResponse:
     if request.method == "GET":
         return get_todos(request=request)
     elif request.method == "POST":
         return add_todo(request=request)
+    elif request.method == "DELETE":
+        return delete_todos(request=request)
     else:
         return HttpResponse(
             JsonResponse(
