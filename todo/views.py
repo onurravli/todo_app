@@ -2,16 +2,12 @@ from django.http import HttpRequest, HttpResponse, JsonResponse
 from .models import Todo
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import render, get_object_or_404
 
 
 def index(request: HttpRequest) -> HttpResponse:
-    return HttpResponse(
-        JsonResponse(
-            dict(message="ok"),
-        ),
-        status=200,
-        content_type="application/json",
-    )
+    todos = Todo.objects.all()
+    return render(request, "index.html", {"todos": todos})
 
 
 def get_all_todos(request: HttpRequest) -> HttpResponse:
@@ -163,14 +159,51 @@ def delete_todo_by_id(request: HttpRequest, id: int) -> HttpResponse:
         )
 
 
+def update_todo_by_id(request: HttpRequest, id: int) -> HttpResponse:
+    try:
+        todo = Todo.objects.get(pk=id)
+        todo.title = request.POST.get("title", todo.title)
+        todo.desc = request.POST.get("desc", todo.desc)
+        todo.done = bool(request.POST.get("done", todo.done))
+        todo.save()
+        return HttpResponse(
+            JsonResponse(
+                dict(message=f"Todo with id {id} updated."),
+            ),
+            status=200,
+            content_type="application/json",
+        )
+    except ObjectDoesNotExist as odne:
+        return HttpResponse(
+            JsonResponse(
+                dict(
+                    error="Todo not found",
+                ),
+            ),
+            status=404,
+            content_type="application/json",
+        )
+    except Exception as ex:
+        return HttpResponse(
+            JsonResponse(
+                dict(
+                    message="An error occurred.",
+                    ex=ex.__str__(),
+                ),
+            ),
+            status=500,
+            content_type="application/json",
+        )
+
+
 @csrf_exempt
 def handle_todo_by_id(request: HttpRequest, id: int) -> HttpRequest:
     if request.method == "GET":
         return get_todo_by_id(request=request, id=id)
     elif request.method == "DELETE":
         return delete_todo_by_id(request=request, id=id)
-    elif request.method == "PUT":
-        pass
+    elif request.method == "POST":
+        return update_todo_by_id(request=request, id=id)
     else:
         return HttpResponse(
             JsonResponse(
