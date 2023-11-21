@@ -13,10 +13,6 @@ def index(request: HttpRequest) -> HttpResponse:
     )
 
 
-def add_todo(request: HttpRequest) -> HttpResponse:
-    pass
-
-
 def get_todos(request: HttpRequest) -> HttpResponse:
     return HttpResponse(
         JsonResponse(
@@ -72,3 +68,14 @@ def get_todo_by_id(request: HttpRequest, id: int) -> HttpResponse:
             status=500,
             content_type="application/json",
         )
+
+
+def add_todo(request: HttpRequest) -> HttpResponse:
+    pass
+
+
+def handle_todos(request: HttpRequest) -> HttpResponse:
+    if request.method == "GET":
+        return get_todos(request=request)
+    else:
+        return add_todo(request=request)
