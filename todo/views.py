@@ -73,8 +73,8 @@ def get_todo_by_id(request: HttpRequest, id: int) -> HttpResponse:
 
 @csrf_exempt
 def add_todo(request: HttpRequest) -> HttpResponse:
-    title = request.POST["title"]
-    desc = request.POST["desc"]
+    title = request.POST.get("title", "")
+    desc = request.POST.get("desc", "")
     if not title or not desc:
         return HttpResponse(
             JsonResponse(
@@ -112,6 +112,26 @@ def add_todo(request: HttpRequest) -> HttpResponse:
                 status=500,
                 content_type="application/json",
             )
+
+
+def delete_todos(request: HttpRequest) -> HttpResponse:
+    try:
+        Todo.objects.all().delete()
+        return HttpResponse(
+            JsonResponse(
+                dict(message="All todos deleted."),
+            ),
+            status=200,
+            content_type="application/json",
+        )
+    except Exception as ex:
+        return HttpResponse(
+            JsonResponse(
+                dict(message="An error occurred."),
+            ),
+            status=500,
+            content_type="application/json",
+        )
 
 
 @csrf_exempt
